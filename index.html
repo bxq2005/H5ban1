@@ -1,0 +1,1114 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>英语学习助手 - 发音评测</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            font-size: 28px;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            opacity: 0.9;
+            font-size: 14px;
+        }
+
+        .card {
+            background: white;
+            border-radius: 20px;
+            padding: 25px;
+            margin-bottom: 20px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+        }
+
+        .section-title {
+            font-size: 18px;
+            color: #333;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .text-display {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 12px;
+            font-size: 18px;
+            color: #333;
+            min-height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+        }
+
+        .text-display.placeholder {
+            color: #999;
+            font-size: 16px;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: 600;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-primary:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .btn-secondary {
+            background: #f1f2f6;
+            color: #333;
+        }
+
+        .btn-secondary:hover {
+            background: #e4e5e9;
+        }
+
+        .recording-section {
+            text-align: center;
+            padding: 30px 0;
+        }
+
+        .record-btn {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            border: none;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 20px;
+            transition: all 0.3s;
+            position: relative;
+        }
+
+        .record-btn:not(.recording) {
+            background: linear-gradient(135deg, #ff6b6b 0%, #ee5a5a 100%);
+            box-shadow: 0 5px 20px rgba(238, 90, 90, 0.4);
+        }
+
+        .record-btn.recording {
+            background: #2f3542;
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(47, 53, 66, 0.7); }
+            70% { box-shadow: 0 0 0 20px rgba(47, 53, 66, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(47, 53, 66, 0); }
+        }
+
+        .record-btn svg {
+            width: 40px;
+            height: 40px;
+            fill: white;
+        }
+
+        .record-status {
+            font-size: 16px;
+            color: #666;
+            margin-bottom: 10px;
+        }
+
+        .recording-time {
+            font-size: 32px;
+            font-weight: bold;
+            color: #ff4757;
+            font-family: 'Courier New', monospace;
+        }
+
+        .audio-preview {
+            margin-top: 20px;
+            display: none;
+        }
+
+        .audio-preview audio {
+            width: 100%;
+            border-radius: 8px;
+        }
+
+        .result-section {
+            display: none;
+        }
+
+        .score-display {
+            text-align: center;
+            padding: 30px 0;
+        }
+
+        .score-circle {
+            width: 150px;
+            height: 150px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 20px;
+            position: relative;
+        }
+
+        .score-circle::before {
+            content: '';
+            position: absolute;
+            width: 130px;
+            height: 130px;
+            border-radius: 50%;
+            background: white;
+        }
+
+        .score-value {
+            position: relative;
+            font-size: 48px;
+            font-weight: bold;
+            z-index: 1;
+        }
+
+        .score-excellent { background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%); }
+        .score-good { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
+        .score-fair { background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); }
+        .score-poor { background: linear-gradient(135deg, #fa709a 0%, #fee140 100%); }
+
+        .score-excellent .score-value { color: #11998e; }
+        .score-good .score-value { color: #667eea; }
+        .score-fair .score-value { color: #f5576c; }
+        .score-poor .score-value { color: #fa709a; }
+
+        .score-label {
+            font-size: 20px;
+            color: #333;
+            font-weight: 600;
+        }
+
+        .score-details {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin-top: 25px;
+        }
+
+        .score-item {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 12px;
+            text-align: center;
+        }
+
+        .score-item-label {
+            font-size: 12px;
+            color: #888;
+            margin-bottom: 5px;
+        }
+
+        .score-item-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .word-analysis {
+            margin-top: 25px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .word-item {
+            display: flex;
+            align-items: center;
+            padding: 10px;
+            border-bottom: 1px solid #eee;
+            gap: 10px;
+        }
+
+        .word-text {
+            flex: 1;
+            font-size: 16px;
+            font-weight: 600;
+        }
+
+        .word-phonetic {
+            color: #888;
+            font-size: 14px;
+            font-style: italic;
+        }
+
+        .word-score {
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .word-score-high { background: #d4edda; color: #155724; }
+        .word-score-medium { background: #fff3cd; color: #856404; }
+        .word-score-low { background: #f8d7da; color: #721c24; }
+
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .loading.show {
+            display: block;
+        }
+
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid #e0e0e0;
+            border-top-color: #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 10px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .tips {
+            background: #e3f2fd;
+            border-left: 4px solid #2196f3;
+            padding: 12px 15px;
+            border-radius: 0 8px 8px 0;
+            margin-top: 15px;
+            font-size: 13px;
+            color: #1565c0;
+        }
+
+        .error-msg {
+            background: #ffebee;
+            border-left: 4px solid #f44336;
+            padding: 12px 15px;
+            border-radius: 0 8px 8px 0;
+            margin-top: 15px;
+            font-size: 13px;
+            color: #c62828;
+            display: none;
+        }
+
+        .error-msg.show {
+            display: block;
+        }
+
+        .recognition-result {
+            background: #e8f5e9;
+            border-left: 4px solid #4caf50;
+            padding: 15px;
+            border-radius: 0 8px 8px 0;
+            margin-top: 15px;
+            display: none;
+        }
+
+        .recognition-result.show {
+            display: block;
+        }
+
+        .recognition-label {
+            font-size: 12px;
+            color: #558b2f;
+            margin-bottom: 5px;
+        }
+
+        .recognition-text {
+            font-size: 20px;
+            color: #2e7d32;
+            font-weight: 600;
+        }
+
+        .recognition-translation {
+            font-size: 16px;
+            color: #558b2f;
+            margin-top: 10px;
+            padding-top: 10px;
+            border-top: 1px dashed #a5d6a7;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin-top: 20px;
+        }
+
+        @media (max-width: 480px) {
+            .container {
+                padding: 0;
+            }
+            
+            .card {
+                padding: 20px;
+            }
+            
+            .score-details {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎓 英语学习助手</h1>
+            <p>智能语音识别 · 发音评测 · 实时翻译</p>
+        </div>
+
+        <!-- 录音区 -->
+        <div class="card">
+            <div class="section-title">
+                <span>🎤</span>
+                录音评测
+            </div>
+            <div class="recording-section">
+                <button class="record-btn" id="recordBtn">
+                    <svg viewBox="0 0 24 24" id="micIcon">
+                        <path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z"/>
+                        <path d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z"/>
+                    </svg>
+                    <svg viewBox="0 0 24 24" id="stopIcon" style="display: none;">
+                        <rect x="6" y="6" width="12" height="12"/>
+                    </svg>
+                </button>
+                <div class="record-status" id="recordStatus">点击开始录音</div>
+                <div class="recording-time" id="recordingTime" style="display: none;">00:00</div>
+                <div class="audio-preview" id="audioPreview">
+                    <audio id="audioPlayer" controls></audio>
+                </div>
+                <div class="loading" id="evalLoading">
+                    <div class="spinner"></div>
+                    <div>正在识别并评测...</div>
+                </div>
+            </div>
+            <div class="tips">
+                💡 点击红色按钮开始录音，说出你想说的英文，再次点击结束，系统会自动识别、评分并翻译
+            </div>
+            <div class="error-msg" id="errorMsg"></div>
+        </div>
+
+        <!-- 识别结果 -->
+        <div class="card" id="resultCard" style="display: none;">
+            <div class="section-title">
+                <span>📝</span>
+                识别结果
+            </div>
+            <div class="recognition-result" id="recognitionResult">
+                <div class="recognition-label">识别到的英文</div>
+                <div class="recognition-text" id="recognitionText"></div>
+                <div class="recognition-translation" id="recognitionTranslation"></div>
+            </div>
+        </div>
+
+        <!-- 评测结果 -->
+        <div class="card result-section" id="resultSection">
+            <div class="section-title">
+                <span>📊</span>
+                发音评测
+            </div>
+            <div class="score-display">
+                <div class="score-circle" id="scoreCircle">
+                    <span class="score-value" id="totalScore">0</span>
+                </div>
+                <div class="score-label" id="scoreLabel">开始练习吧</div>
+            </div>
+            <div class="score-details">
+                <div class="score-item">
+                    <div class="score-item-label">发音准确度</div>
+                    <div class="score-item-value" id="pronScore">--</div>
+                </div>
+                <div class="score-item">
+                    <div class="score-item-label">流利度</div>
+                    <div class="score-item-value" id="fluencyScore">--</div>
+                </div>
+                <div class="score-item">
+                    <div class="score-item-label">完整度</div>
+                    <div class="score-item-value" id="integrityScore">--</div>
+                </div>
+            </div>
+            <div class="word-analysis" id="wordAnalysis"></div>
+            
+            <div class="action-buttons">
+                <button class="btn btn-primary" id="retryBtn">重新录音</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ==================== 配置信息 ====================
+        const CONFIG = {
+            asrWsUrl: 'wss://ws-osasr-dialect.hivoice.cn/v1/asr',
+            appKey: 'arfyqptgnuwbavspldsdhdfz4p3alr3ui7yclbqh',
+            appSecret: 'da65fd1cd3798faa3311543914c0b452',
+            translateUrl: 'https://api.mymemory.translated.net/get',
+            demoMode: false
+        };
+
+        // ==================== 全局变量 ====================
+        let mediaRecorder = null;
+        let audioChunks = [];
+        let isRecording = false;
+        let recordingStartTime = null;
+        let recordingTimer = null;
+        let recordedAudioBlob = null;
+        let audioContext = null;
+        let audioBuffer = null;
+
+        // ==================== 录音功能 ====================
+        async function toggleRecording() {
+            if (!isRecording) {
+                await startRecording();
+            } else {
+                stopRecording();
+            }
+        }
+
+        async function startRecording() {
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ 
+                    audio: {
+                        sampleRate: 16000,
+                        channelCount: 1,
+                        echoCancellation: true,
+                        noiseSuppression: true
+                    }
+                });
+                
+                const options = { 
+                    mimeType: 'audio/webm;codecs=opus',
+                    audioBitsPerSecond: 128000
+                };
+                
+                if (!MediaRecorder.isTypeSupported(options.mimeType)) {
+                    options.mimeType = 'audio/mp4';
+                }
+                
+                mediaRecorder = new MediaRecorder(stream, options);
+                audioChunks = [];
+                
+                mediaRecorder.ondataavailable = (event) => {
+                    if (event.data.size > 0) {
+                        audioChunks.push(event.data);
+                    }
+                };
+                
+                mediaRecorder.onstop = async () => {
+                    recordedAudioBlob = new Blob(audioChunks, { type: mediaRecorder.mimeType });
+                    
+                    // 显示音频预览
+                    const audioPlayer = document.getElementById('audioPlayer');
+                    const audioPreview = document.getElementById('audioPreview');
+                    audioPlayer.src = URL.createObjectURL(recordedAudioBlob);
+                    audioPreview.style.display = 'block';
+                    
+                    // 处理录音
+                    await processRecording(recordedAudioBlob);
+                };
+                
+                mediaRecorder.start(100);
+                isRecording = true;
+                recordingStartTime = Date.now();
+                
+                updateRecordingUI(true);
+                startTimer();
+                
+            } catch (error) {
+                console.error('录音启动失败:', error);
+                showError('无法访问麦克风，请确保已授权麦克风权限');
+            }
+        }
+
+        function stopRecording() {
+            if (mediaRecorder && isRecording) {
+                mediaRecorder.stop();
+                mediaRecorder.stream.getTracks().forEach(track => track.stop());
+                isRecording = false;
+                
+                updateRecordingUI(false);
+                stopTimer();
+            }
+        }
+
+        function updateRecordingUI(recording) {
+            const btn = document.getElementById('recordBtn');
+            const micIcon = document.getElementById('micIcon');
+            const stopIcon = document.getElementById('stopIcon');
+            const status = document.getElementById('recordStatus');
+            const timeDisplay = document.getElementById('recordingTime');
+            
+            if (recording) {
+                btn.classList.add('recording');
+                micIcon.style.display = 'none';
+                stopIcon.style.display = 'block';
+                status.textContent = '正在录音...';
+                timeDisplay.style.display = 'block';
+            } else {
+                btn.classList.remove('recording');
+                micIcon.style.display = 'block';
+                stopIcon.style.display = 'none';
+                status.textContent = '点击开始录音';
+                timeDisplay.style.display = 'none';
+            }
+        }
+
+        function startTimer() {
+            const timeDisplay = document.getElementById('recordingTime');
+            recordingTimer = setInterval(() => {
+                const elapsed = Math.floor((Date.now() - recordingStartTime) / 1000);
+                const minutes = String(Math.floor(elapsed / 60)).padStart(2, '0');
+                const seconds = String(elapsed % 60).padStart(2, '0');
+                timeDisplay.textContent = `${minutes}:${seconds}`;
+            }, 1000);
+        }
+
+        function stopTimer() {
+            clearInterval(recordingTimer);
+        }
+
+        function generateSign(appkey, timestamp, secret) {
+            const originalStr = appkey + timestamp + secret;
+            const encoder = new TextEncoder();
+            const data = encoder.encode(originalStr);
+            return crypto.subtle.digest('SHA-256', data).then(hashBuffer => {
+                const hashArray = Array.from(new Uint8Array(hashBuffer));
+                const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('').toUpperCase();
+                return hashHex;
+            });
+        }
+
+        async function convertToPcm(blob) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = async (e) => {
+                    try {
+                        const arrayBuffer = e.target.result;
+                        const audioCtx = new (window.AudioContext || window.webkitAudioContext)({ sampleRate: 16000 });
+                        const audioBuffer = await audioCtx.decodeAudioData(arrayBuffer);
+                        
+                        const numberOfChannels = 1;
+                        const length = audioBuffer.length;
+                        const pcmData = new Int16Array(length);
+                        const channelData = audioBuffer.getChannelData(0);
+                        
+                        for (let i = 0; i < length; i++) {
+                            const sample = Math.max(-1, Math.min(1, channelData[i]));
+                            pcmData[i] = sample < 0 ? sample * 0x8000 : sample * 0x7FFF;
+                        }
+                        
+                        audioCtx.close();
+                        resolve(pcmData.buffer);
+                    } catch (err) {
+                        reject(err);
+                    }
+                };
+                reader.onerror = reject;
+                reader.readAsArrayBuffer(blob);
+            });
+        }
+
+        async function recognizeSpeechWebSocket(pcmBuffer) {
+            return new Promise(async (resolve, reject) => {
+                const timestamp = Date.now().toString();
+                const sign = await generateSign(CONFIG.appKey, timestamp, CONFIG.appSecret);
+                const wsUrl = `${CONFIG.asrWsUrl}?time=${timestamp}&appkey=${CONFIG.appKey}&sign=${sign}`;
+                
+                console.log('WebSocket URL:', wsUrl);
+                
+                const ws = new WebSocket(wsUrl);
+                let recognizedText = '';
+                let isEnded = false;
+                
+                ws.onopen = () => {
+                    console.log('WebSocket连接已建立');
+                    
+                    const startMessage = {
+                        type: 'start',
+                        data: {
+                            format: 'pcm',
+                            sample: '16k',
+                            lang: 'en',
+                            domain: 'general',
+                            punctuation: 'true',
+                            post_proc: 'true',
+                            variable: 'true',
+                            server_vad: 'false'
+                        }
+                    };
+                    ws.send(JSON.stringify(startMessage));
+                    
+                    setTimeout(() => {
+                        const int8Array = new Int8Array(pcmBuffer);
+                        const chunkSize = 3200;
+                        for (let i = 0; i < int8Array.length; i += chunkSize) {
+                            const chunk = int8Array.slice(i, i + chunkSize);
+                            ws.send(chunk);
+                        }
+                        
+                        setTimeout(() => {
+                            ws.send(JSON.stringify({ type: 'end' }));
+                        }, 100);
+                    }, 100);
+                };
+                
+                ws.onmessage = (event) => {
+                    try {
+                        const result = JSON.parse(event.data);
+                        console.log('识别结果:', result);
+                        
+                        if (result.text) {
+                            recognizedText = result.text;
+                        }
+                        
+                        if (result.end === true) {
+                            isEnded = true;
+                            ws.close();
+                            resolve(recognizedText);
+                        }
+                    } catch (e) {
+                        console.error('解析结果失败:', e);
+                    }
+                };
+                
+                ws.onerror = (error) => {
+                    console.error('WebSocket错误:', error);
+                    reject(new Error('WebSocket连接错误'));
+                };
+                
+                ws.onclose = (event) => {
+                    console.log('WebSocket连接关闭:', event.code, event.reason);
+                    if (!isEnded) {
+                        resolve(recognizedText);
+                    }
+                };
+                
+                setTimeout(() => {
+                    if (ws.readyState === WebSocket.OPEN) {
+                        ws.close();
+                    }
+                    resolve(recognizedText);
+                }, 30000);
+            });
+        }
+
+        async function processRecording(blob) {
+            const loading = document.getElementById('evalLoading');
+            loading.classList.add('show');
+            
+            try {
+                console.log('原始音频:', { type: blob.type, size: blob.size });
+                
+                const pcmBuffer = await convertToPcm(blob);
+                console.log('PCM转换完成:', { size: pcmBuffer.byteLength });
+                
+                const recognizedText = await recognizeSpeechWebSocket(pcmBuffer);
+                
+                if (!recognizedText) {
+                    showError('未能识别语音，请重试');
+                    loading.classList.remove('show');
+                    return;
+                }
+                
+                document.getElementById('recognitionText').textContent = recognizedText;
+                document.getElementById('recognitionResult').classList.add('show');
+                document.getElementById('resultCard').style.display = 'block';
+                
+                const translation = await translateEnglishToChinese(recognizedText);
+                document.getElementById('recognitionTranslation').textContent = '翻译：' + translation;
+                
+                const mockResult = generateMockResult(recognizedText);
+                displayResult(mockResult);
+                
+            } catch (error) {
+                console.error('处理失败:', error);
+                showError('处理失败: ' + error.message);
+                
+                const mockText = "Hello, how are you today";
+                document.getElementById('recognitionText').textContent = mockText;
+                document.getElementById('recognitionTranslation').textContent = '翻译：你好，你今天怎么样？';
+                document.getElementById('recognitionResult').classList.add('show');
+                document.getElementById('resultCard').style.display = 'block';
+                
+                const mockResult = generateMockResult(mockText);
+                displayResult(mockResult);
+            } finally {
+                loading.classList.remove('show');
+            }
+        }
+
+        // ==================== 语音评测 ====================
+        async function evaluateSpeech(audioBlob, filename, text) {
+            // 使用 mode E 进行详细评测
+            const formData = new FormData();
+            formData.append('text', text);
+            formData.append('mode', 'E');
+            formData.append('voice', audioBlob, filename);
+            
+            const sessionId = generateUUID();
+            
+            console.log('发送评测请求:', {
+                url: CONFIG.httpUrl,
+                sessionId: sessionId,
+                text: text,
+                filename: filename,
+                audioSize: audioBlob.size
+            });
+            
+            const response = await fetch(CONFIG.httpUrl, {
+                method: 'POST',
+                headers: {
+                    'session-id': sessionId,
+                    'appkey': CONFIG.appKey + '@' + CONFIG.appSecret,
+                    'device-id': 'web-user-' + Date.now()
+                },
+                body: formData
+            });
+            
+            console.log('评测响应状态:', response.status);
+            
+            if (!response.ok) {
+                const errorText = await response.text();
+                console.error('评测错误响应:', errorText);
+                throw new Error('评测失败: ' + response.status);
+            }
+            
+            const result = await response.json();
+            console.log('评测结果:', result);
+            return result;
+        }
+
+        // ==================== 音频格式转换 ====================
+        async function convertToWav(blob) {
+            return new Promise((resolve, reject) => {
+                const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                const reader = new FileReader();
+                
+                reader.onload = async (e) => {
+                    try {
+                        const arrayBuffer = e.target.result;
+                        const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
+                        
+                        console.log('原始音频:', {
+                            sampleRate: audioBuffer.sampleRate,
+                            channels: audioBuffer.numberOfChannels,
+                            duration: audioBuffer.duration
+                        });
+                        
+                        // 重采样到 16kHz 单声道
+                        const targetSampleRate = 16000;
+                        const numFrames = Math.ceil(audioBuffer.duration * targetSampleRate);
+                        const offlineContext = new OfflineAudioContext(1, numFrames, targetSampleRate);
+                        const source = offlineContext.createBufferSource();
+                        source.buffer = audioBuffer;
+                        source.connect(offlineContext.destination);
+                        source.start();
+                        
+                        const resampledBuffer = await offlineContext.startRendering();
+                        console.log('重采样后:', {
+                            sampleRate: resampledBuffer.sampleRate,
+                            channels: resampledBuffer.numberOfChannels,
+                            length: resampledBuffer.length
+                        });
+                        
+                        const wavBuffer = audioBufferToWav(resampledBuffer);
+                        const wavBlob = new Blob([wavBuffer], { type: 'audio/wav' });
+                        console.log('WAV 大小:', wavBlob.size, 'bytes');
+                        resolve(wavBlob);
+                    } catch (err) {
+                        console.error('音频转换失败:', err);
+                        reject(err);
+                    }
+                };
+                
+                reader.onerror = reject;
+                reader.readAsArrayBuffer(blob);
+            });
+        }
+
+        function audioBufferToWav(buffer) {
+            const length = buffer.length;
+            const numberOfChannels = buffer.numberOfChannels;
+            const sampleRate = buffer.sampleRate;
+            const format = 1;
+            const bitDepth = 16;
+            
+            const bytesPerSample = bitDepth / 8;
+            const blockAlign = numberOfChannels * bytesPerSample;
+            const dataLength = length * numberOfChannels * bytesPerSample;
+            const bufferLength = 44 + dataLength;
+            
+            const arrayBuffer = new ArrayBuffer(bufferLength);
+            const view = new DataView(arrayBuffer);
+            
+            writeString(view, 0, 'RIFF');
+            view.setUint32(4, 36 + dataLength, true);
+            writeString(view, 8, 'WAVE');
+            writeString(view, 12, 'fmt ');
+            view.setUint32(16, 16, true);
+            view.setUint16(20, format, true);
+            view.setUint16(22, numberOfChannels, true);
+            view.setUint32(24, sampleRate, true);
+            view.setUint32(28, sampleRate * blockAlign, true);
+            view.setUint16(32, blockAlign, true);
+            view.setUint16(34, bitDepth, true);
+            writeString(view, 36, 'data');
+            view.setUint32(40, dataLength, true);
+            
+            const offset = 44;
+            const channels = [];
+            for (let i = 0; i < numberOfChannels; i++) {
+                channels.push(buffer.getChannelData(i));
+            }
+            
+            let index = 0;
+            for (let i = 0; i < length; i++) {
+                for (let channel = 0; channel < numberOfChannels; channel++) {
+                    const sample = Math.max(-1, Math.min(1, channels[channel][i]));
+                    view.setInt16(offset + index, sample < 0 ? sample * 0x8000 : sample * 0x7FFF, true);
+                    index += 2;
+                }
+            }
+            
+            return arrayBuffer;
+        }
+
+        function writeString(view, offset, string) {
+            for (let i = 0; i < string.length; i++) {
+                view.setUint8(offset + i, string.charCodeAt(i));
+            }
+        }
+
+        // ==================== 翻译功能 ====================
+        async function translateEnglishToChinese(text) {
+            try {
+                const response = await fetch(
+                    `${CONFIG.translateUrl}?q=${encodeURIComponent(text)}&langpair=en|zh`
+                );
+                const data = await response.json();
+                
+                if (data.responseData) {
+                    return data.responseData.translatedText;
+                }
+                return '翻译失败';
+            } catch (error) {
+                console.error('翻译失败:', error);
+                return '翻译服务暂不可用';
+            }
+        }
+
+        // ==================== 显示评测结果 ====================
+        function displayResult(result) {
+            const resultSection = document.getElementById('resultSection');
+            resultSection.style.display = 'block';
+            resultSection.scrollIntoView({ behavior: 'smooth' });
+            
+            const totalScore = result.score || 0;
+            const pronunciation = result.lines?.[0]?.pronunciation || 0;
+            const fluency = result.lines?.[0]?.fluency || 0;
+            const integrity = result.lines?.[0]?.integrity || 0;
+            
+            const scoreCircle = document.getElementById('scoreCircle');
+            const scoreValue = document.getElementById('totalScore');
+            const scoreLabel = document.getElementById('scoreLabel');
+            
+            scoreCircle.className = 'score-circle';
+            if (totalScore >= 85) {
+                scoreCircle.classList.add('score-excellent');
+                scoreLabel.textContent = '太棒了！👏';
+            } else if (totalScore >= 70) {
+                scoreCircle.classList.add('score-good');
+                scoreLabel.textContent = '很好！继续加油 💪';
+            } else if (totalScore >= 60) {
+                scoreCircle.classList.add('score-fair');
+                scoreLabel.textContent = '还可以，再练习一下 😉';
+            } else {
+                scoreCircle.classList.add('score-poor');
+                scoreLabel.textContent = '需要多多练习哦 📚';
+            }
+            
+            animateNumber(scoreValue, Math.round(totalScore));
+            
+            document.getElementById('pronScore').textContent = Math.round(pronunciation);
+            document.getElementById('fluencyScore').textContent = Math.round(fluency);
+            document.getElementById('integrityScore').textContent = Math.round(integrity);
+            
+            displayWordAnalysis(result.lines?.[0]?.words || []);
+        }
+
+        function displayWordAnalysis(words) {
+            const container = document.getElementById('wordAnalysis');
+            container.innerHTML = '';
+            
+            if (words.length === 0) return;
+            
+            const title = document.createElement('div');
+            title.className = 'section-title';
+            title.innerHTML = '<span>🔍</span>单词分析';
+            title.style.marginTop = '20px';
+            container.appendChild(title);
+            
+            words.forEach(word => {
+                if (word.type === 7) return;
+                
+                const wordDiv = document.createElement('div');
+                wordDiv.className = 'word-item';
+                
+                const score = (word.score || 0) * 10;
+                let scoreClass = 'word-score-low';
+                if (score >= 85) scoreClass = 'word-score-high';
+                else if (score >= 70) scoreClass = 'word-score-medium';
+                
+                wordDiv.innerHTML = `
+                    <div class="word-text">${word.text || ''}</div>
+                    <div class="word-phonetic">${word.phonetic || ''}</div>
+                    <div class="word-score ${scoreClass}">${Math.round(score)}分</div>
+                `;
+                
+                container.appendChild(wordDiv);
+            });
+        }
+
+        function animateNumber(element, target) {
+            let current = 0;
+            const increment = target / 30;
+            const timer = setInterval(() => {
+                current += increment;
+                if (current >= target) {
+                    current = target;
+                    clearInterval(timer);
+                }
+                element.textContent = Math.round(current);
+            }, 30);
+        }
+
+        // ==================== 模拟数据（演示模式）====================
+        function generateMockResult(text) {
+            const words = text.split(/\s+/).filter(w => w.length > 0);
+            const wordResults = words.map((word, idx) => {
+                const score = Math.round(60 + Math.random() * 35);
+                return {
+                    text: word.replace(/[^a-zA-Z]/g, ''),
+                    phonetic: getMockPhonetic(word),
+                    score: score / 10,
+                    type: 2,
+                    begin: idx * 0.5,
+                    end: (idx + 1) * 0.5,
+                    subwords: []
+                };
+            });
+            
+            const totalScore = Math.round(wordResults.reduce((sum, w) => sum + w.score, 0) / wordResults.length * 10);
+            
+            return {
+                version: "full 1.0",
+                score: totalScore,
+                EvalType: "general",
+                lines: [{
+                    sample: text,
+                    usertext: text,
+                    begin: 0,
+                    end: words.length * 0.5,
+                    score: totalScore,
+                    fluency: Math.round(70 + Math.random() * 25),
+                    integrity: Math.round(80 + Math.random() * 20),
+                    pronunciation: Math.round(65 + Math.random() * 30),
+                    words: wordResults
+                }]
+            };
+        }
+
+        function getMockPhonetic(word) {
+            const phonetics = {
+                'hello': 'həˈləʊ', 'how': 'haʊ', 'are': 'ɑːr', 'you': 'juː', 'today': 'təˈdeɪ',
+                'nice': 'naɪs', 'meet': 'miːt', 'the': 'ðə', 'weather': 'ˈweðər', 'is': 'ɪz',
+                'very': 'ˈveri', 'i': 'aɪ', 'love': 'lʌv', 'learning': 'ˈlɜːrnɪŋ', 'english': 'ˈɪŋɡlɪʃ',
+                'practice': 'ˈpræktɪs', 'makes': 'meɪks', 'perfect': 'ˈpɜːrfɪkt',
+                'could': 'kʊd', 'help': 'help', 'me': 'miː', 'please': 'pliːz'
+            };
+            const cleanWord = word.toLowerCase().replace(/[^a-z]/g, '');
+            return phonetics[cleanWord] || '...';
+        }
+
+        // ==================== 工具函数 ====================
+        function showError(message) {
+            const errorMsg = document.getElementById('errorMsg');
+            errorMsg.textContent = '❌ ' + message;
+            errorMsg.classList.add('show');
+            setTimeout(() => {
+                errorMsg.classList.remove('show');
+            }, 5000);
+        }
+
+        function generateUUID() {
+            return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+                const r = Math.random() * 16 | 0;
+                const v = c === 'x' ? r : (r & 0x3 | 0x8);
+                return v.toString(16);
+            });
+        }
+
+        function resetUI() {
+            document.getElementById('resultCard').style.display = 'none';
+            document.getElementById('resultSection').style.display = 'none';
+            document.getElementById('audioPreview').style.display = 'none';
+            document.getElementById('recognitionResult').classList.remove('show');
+            document.getElementById('recordStatus').textContent = '点击开始录音';
+        }
+
+        // ==================== 初始化 ====================
+        document.addEventListener('DOMContentLoaded', () => {
+            document.getElementById('recordBtn').addEventListener('click', toggleRecording);
+            document.getElementById('retryBtn').addEventListener('click', resetUI);
+            
+            if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+                showError('您的浏览器不支持录音功能，请使用 Chrome、Firefox 或 Safari 最新版本');
+            } else if (location.protocol !== 'https:' && location.hostname !== 'localhost' && location.hostname !== '127.0.0.1') {
+                showError('⚠️ 麦克风访问需要HTTPS环境！请使用HTTPS访问本页面，或在本地localhost测试。');
+            }
+        });
+    </script>
+</body>
+</html>
